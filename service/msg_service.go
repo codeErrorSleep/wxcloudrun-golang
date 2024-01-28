@@ -20,14 +20,14 @@ type SendMessageReq struct {
 	MsgDataId    string `xml:"MsgDataId" json:"MsgDataId"`
 	Idx          string `xml:"Idx" json:"Idx"`
 }
+
 type ReplyMsgRes struct {
-	ToUserName   string `xml:"ToUserName"`
-	FromUserName string `xml:"FromUserName"`
-	CreateTime   int64  `xml:"CreateTime"`
-	MsgType      string `xml:"MsgType"`
-	Content      string `xml:"Content"`
-	// 若不标记XMLName, 则解析后的xml名为该结构体的名称
-	XMLName xml.Name `xml:"xml"`
+	XMLName      xml.Name `xml:"xml"`
+	ToUserName   string   `xml:"ToUserName" json:"ToUserName"`
+	FromUserName string   `xml:"FromUserName" json:"FromUserName"`
+	CreateTime   int64    `xml:"CreateTime" json:"CreateTime"`
+	MsgType      string   `xml:"MsgType" json:"MsgType"`
+	Content      string   `xml:"Content" json:"Content"`
 }
 
 // end_ai_generated
@@ -61,13 +61,13 @@ func SendMsgHandler(w http.ResponseWriter, r *http.Request) {
 		Content:      "你好，我是机器人:" + msgReq.Content,
 	}
 
-	msg, err := xml.Marshal(&replyMsg)
+	msg, err := json.Marshal(&replyMsg)
 	if err != nil {
 		fmt.Println("xml.Marshal失败:", err)
 		return
 	}
 
-	w.Header().Set("content-type", "application/xml")
+	w.Header().Set("content-type", "application/json")
 	w.Write(msg)
 
 	// res := &JsonResult{}
