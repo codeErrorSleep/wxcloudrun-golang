@@ -31,18 +31,42 @@ func SendMsgHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	fmt.Println("读取请求体成功", string(body))
 
-	// 解析XML
-	var sendMessageReq SendMessageReq
-	err = xml.Unmarshal(body, &sendMessageReq)
-	if err != nil {
-		fmt.Println("结构体:解析XML失败", err)
-	}
+	// 输出请求体
+	fmt.Println("请求体内容:", string(body))
 
-	var sendMessageReqV2 map[string]interface{}
-	err = xml.Unmarshal(body, &sendMessageReqV2)
-	if err != nil {
-		fmt.Println("map:解析XML失败", err)
+	// 尝试解析为XML
+	var sendMessageReq SendMessageReq
+	errXML := xml.Unmarshal(body, &sendMessageReq)
+	if errXML == nil {
+		fmt.Println("解析为XML成功:", sendMessageReq)
+		return
 	}
+	fmt.Println("解析为XML失败:", errXML)
+
+	// 尝试解析为JSON
+	var sendMessageReqJSON map[string]interface{}
+	errJSON := json.Unmarshal(body, &sendMessageReqJSON)
+	if errJSON == nil {
+		fmt.Println("解析为JSON成功:", sendMessageReqJSON)
+		return
+	}
+	fmt.Println("解析为JSON失败:", errJSON)
+
+	// 如果都失败了，返回错误
+	fmt.Println("未知的请求格式")
+
+	// // 解析XML
+	// var sendMessageReq SendMessageReq
+	// err = xml.Unmarshal(body, &sendMessageReq)
+	// if err != nil {
+	// 	fmt.Println("结构体:解析XML失败", err)
+	// }
+
+	// var sendMessageReqV2 map[string]interface{}
+	// err = xml.Unmarshal(body, &sendMessageReqV2)
+	// if err != nil {
+	// 	fmt.Println("map:解析XML失败", err)
+	// }
 
 	sendMessageReqStr, err := json.Marshal(sendMessageReq)
 
