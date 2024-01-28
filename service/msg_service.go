@@ -9,6 +9,8 @@ import (
 )
 
 type SendMessageReq struct {
+	XMLName xml.Name `xml:"xml"`
+
 	ToUserName   string `xml:"ToUserName"`
 	FromUserName string `xml:"FromUserName"`
 	CreateTime   int64  `xml:"CreateTime"`
@@ -23,6 +25,11 @@ type SendMessageReq struct {
 func SendMsgHandler(w http.ResponseWriter, r *http.Request) {
 	// 读取请求体
 	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("读取请求体失败", err)
+	}
+	defer r.Body.Close()
+	fmt.Println("读取请求体成功", string(body))
 
 	// 解析XML
 	var sendMessageReq SendMessageReq
