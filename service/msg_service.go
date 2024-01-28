@@ -9,15 +9,14 @@ import (
 )
 
 type SendMessageReq struct {
-	XMLName      xml.Name `xml:"xml"`
-	ToUserName   string   `xml:"ToUserName"`
-	FromUserName string   `xml:"FromUserName"`
-	CreateTime   int64    `xml:"CreateTime"`
-	MsgType      string   `xml:"MsgType"`
-	Content      string   `xml:"Content"`
-	MsgId        int64    `xml:"MsgId"`
-	MsgDataId    string   `xml:"MsgDataId"`
-	Idx          string   `xml:"Idx"`
+	ToUserName   string `xml:"ToUserName"`
+	FromUserName string `xml:"FromUserName"`
+	CreateTime   int64  `xml:"CreateTime"`
+	MsgType      string `xml:"MsgType"`
+	Content      string `xml:"Content"`
+	MsgId        int64  `xml:"MsgId"`
+	MsgDataId    string `xml:"MsgDataId"`
+	Idx          string `xml:"Idx"`
 }
 
 // SendMsgHandler 消息发送管理
@@ -29,6 +28,13 @@ func SendMsgHandler(w http.ResponseWriter, r *http.Request) {
 	var sendMessageReq SendMessageReq
 	err = xml.Unmarshal(body, &sendMessageReq)
 	if err != nil {
+		fmt.Println("结构体:解析XML失败", err)
+	}
+
+	var sendMessageReqV2 map[string]interface{}
+	err = xml.Unmarshal(body, &sendMessageReqV2)
+	if err != nil {
+		fmt.Println("map:解析XML失败", err)
 	}
 
 	sendMessageReqStr, err := json.Marshal(sendMessageReq)
