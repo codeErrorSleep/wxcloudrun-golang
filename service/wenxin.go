@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
 )
 
-const API_KEY = "8CghGq0rYLASII9iEUxzCxnj"
-const SECRET_KEY = "bz8ObuEgaZO2Y86mQorGIwzyTgCiew4V"
+var API_KEY = ""
+var SECRET_KEY = ""
 
 type ChatMsgReq struct {
 	Messages []Msg `json:"messages"`
@@ -44,6 +45,11 @@ type ChatMsgResp struct {
 		CompletionTokens int `json:"completion_tokens"`
 		TotalTokens      int `json:"total_tokens"`
 	} `json:"usage"`
+}
+
+func InitWenXin() {
+	API_KEY = os.Getenv("API_KEY")
+	SECRET_KEY = os.Getenv("SECRET_KEY")
 }
 
 func postToWenXin(chatReq ChatMsgReq) (chatMsgResp ChatMsgResp, err error) {

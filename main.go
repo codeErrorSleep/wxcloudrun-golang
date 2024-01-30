@@ -14,7 +14,7 @@ func main() {
 	}
 	// 初始化本地缓存
 	service.InitLocalCache()
-
+	service.InitWenXin()
 	// 创建Gin引擎
 	router := gin.Default()
 
