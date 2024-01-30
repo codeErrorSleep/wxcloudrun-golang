@@ -105,3 +105,5 @@ func createChatMsgReqWithHistory(wechatMsgReq WeChatSendMsgReq, chatMsgReq ChatM
 	})
 	return chatMsgReq
 }
+
+// test
