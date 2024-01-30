@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/xml"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -37,6 +38,7 @@ func SendMsgHandler(c *gin.Context) {
 	// 读取请求体
 	var wechatMsgReq WeChatSendMsgReq
 	if err := c.ShouldBindJSON(&wechatMsgReq); err != nil {
+		fmt.Println("Invalid wechatMsgReq" + err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid wechatMsgReq" + err.Error(),
 		})
@@ -46,6 +48,7 @@ func SendMsgHandler(c *gin.Context) {
 	// 获取之前是否提交过 localCacheKey
 	chatMsgReq, err := getMsgHistory(wechatMsgReq.FromUserName)
 	if err != nil {
+		fmt.Println("getMsgHistory error" + err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Internal error" + err.Error(),
 		})
@@ -60,6 +63,7 @@ func SendMsgHandler(c *gin.Context) {
 	// 调用接口
 	chatMsgResp, err := postToWenXin(chatMsgReq)
 	if err != nil {
+		fmt.Println("postToWenXin error" + err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Internal error" + err.Error(),
 		})
@@ -74,6 +78,7 @@ func SendMsgHandler(c *gin.Context) {
 	})
 	err = setMsgHistory(wechatMsgReq.FromUserName, chatMsgReq)
 	if err != nil {
+		fmt.Println("setMsgHistory error" + err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Internal error" + err.Error(),
 		})
