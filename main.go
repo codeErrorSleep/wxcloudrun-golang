@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"wxcloudrun-golang/db"
 	"wxcloudrun-golang/service"
 
@@ -20,6 +21,6 @@ func main() {
 
 	router.POST("/send_msg", service.SendMsgHandler)
 	// 启动HTTP服务器
-	router.Run(":80")
+	log.Fatal(router.Run(":80"))
 
 }
