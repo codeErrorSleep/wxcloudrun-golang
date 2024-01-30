@@ -20,10 +20,6 @@ func main() {
 
 	router.POST("/send_msg", service.SendMsgHandler)
 	// 启动HTTP服务器
-	router.Run(":8080")
-	// http.HandleFunc("/", service.IndexHandler)
-	// http.HandleFunc("/api/count", service.CounterHandler)
-	// http.HandleFunc("/send_msg", service.SendMsgHandler)
+	router.Run(":80")
 
-	// log.Fatal(http.ListenAndServe(":80", nil))
 }
