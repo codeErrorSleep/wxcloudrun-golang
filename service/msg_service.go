@@ -1,16 +1,15 @@
 package service
 
 import (
-	"encoding/json"
 	"encoding/xml"
-	"fmt"
-	"io"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 // start_ai_generated
 
-type SendMessageReq struct {
+type WeChatSendMsgReq struct {
 	ToUserName   string `xml:"ToUserName" json:"ToUserName"`
 	FromUserName string `xml:"FromUserName" json:"FromUserName"`
 	CreateTime   int64  `xml:"CreateTime" json:"CreateTime"`
@@ -21,7 +20,7 @@ type SendMessageReq struct {
 	Idx          string `xml:"Idx" json:"Idx"`
 }
 
-type ReplyMsgRes struct {
+type WeChatReplyMsgRes struct {
 	XMLName      xml.Name `xml:"xml"`
 	ToUserName   string   `xml:"ToUserName" json:"ToUserName"`
 	FromUserName string   `xml:"FromUserName" json:"FromUserName"`
@@ -33,51 +32,62 @@ type ReplyMsgRes struct {
 // end_ai_generated
 
 // SendMsgHandler 消息发送管理
-func SendMsgHandler(w http.ResponseWriter, r *http.Request) {
+func SendMsgHandler(c *gin.Context) {
 	// 接收请求
 	// 读取请求体
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		fmt.Println("读取请求体失败", err)
-	}
-	defer r.Body.Close()
-	fmt.Println("读取请求体成功", string(body))
-
-	// 尝试解析为JSON
-	var msgReq SendMessageReq
-	errJSON := json.Unmarshal(body, &msgReq)
-	if errJSON != nil {
-		fmt.Println("解析为JSON失败:", errJSON)
+	var wechatMsgReq WeChatSendMsgReq
+	if err := c.ShouldBindJSON(&wechatMsgReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid wechatMsgReq" + err.Error(),
+		})
 		return
 	}
-	fmt.Println("解析为JSON成功:", msgReq)
+
+	// 获取之前是否提交过 localCacheKey
+	chatMsgReq, err := getMsgHistory(wechatMsgReq.FromUserName)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal error" + err.Error(),
+		})
+		return
+	}
+	if chatMsgReq.Messages == nil {
+		chatMsgReq = createChatMsgReq(wechatMsgReq)
+	} else {
+		chatMsgReq = createChatMsgReqWithHistory(wechatMsgReq, chatMsgReq)
+	}
+
+	// 调用接口
+	chatMsgResp, err := postToWenXin(chatMsgReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal error" + err.Error(),
+		})
+		return
+	}
+
+	// 保存查询的结果
+	chatMsgReq.Messages = append(chatMsgReq.Messages, Msg{
+		Role:    "assistant",
+		Content: chatMsgResp.Result,
+		UserID:  wechatMsgReq.FromUserName,
+	})
+	err = setMsgHistory(wechatMsgReq.FromUserName, chatMsgReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Internal error" + err.Error(),
+		})
+		return
+	}
 
 	// 这里测试 回复消息
-	replyMsg := ReplyMsgRes{
-		ToUserName:   msgReq.FromUserName,
-		FromUserName: msgReq.ToUserName,
-		CreateTime:   msgReq.CreateTime,
+	replyMsg := WeChatReplyMsgRes{
+		ToUserName:   wechatMsgReq.FromUserName,
+		FromUserName: wechatMsgReq.ToUserName,
+		CreateTime:   wechatMsgReq.CreateTime,
 		MsgType:      "text",
-		Content:      "你好，我是机器人:" + msgReq.Content,
+		Content:      chatMsgResp.Result,
 	}
-
-	msg, err := json.Marshal(&replyMsg)
-	if err != nil {
-		fmt.Println("xml.Marshal失败:", err)
-		return
-	}
-
-	w.Header().Set("content-type", "application/json")
-	w.Write(msg)
-
-	// res := &JsonResult{}
-	// res.Code = 0
-	// res.Data = "成功接收到消息" + string(msgReq.Content)
-	// msg, err := json.Marshal(res)
-	// if err != nil {
-	// 	fmt.Fprint(w, "内部错误")
-	// 	return
-	// }
-	// w.Header().Set("content-type", "application/json")
-	// w.Write(msg)
+	// 返回响应
+	c.JSON(http.StatusOK, replyMsg)
 }
