@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/http"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 )
@@ -85,14 +86,26 @@ func SendMsgHandler(c *gin.Context) {
 		return
 	}
 
+	returnCount := truncateStringTo2048(chatMsgResp.Result)
+
 	// 这里测试 回复消息
 	replyMsg := WeChatReplyMsgRes{
 		ToUserName:   wechatMsgReq.FromUserName,
 		FromUserName: wechatMsgReq.ToUserName,
 		CreateTime:   wechatMsgReq.CreateTime,
 		MsgType:      "text",
-		Content:      chatMsgResp.Result,
+		Content:      returnCount,
 	}
 	// 返回响应
 	c.JSON(http.StatusOK, replyMsg)
+}
+
+// 截取字符串到2048个字符
+func truncateStringTo2048(s string) string {
+	// 如果字符数超过2048，则截取
+	if utf8.RuneCountInString(s) > 2048 {
+		return string([]rune(s)[:2048])
+	}
+	// 字符数不超过2048，直接返回原字符串
+	return s
 }
