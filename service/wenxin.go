@@ -15,7 +15,8 @@ var API_KEY = ""
 var SECRET_KEY = ""
 
 type ChatMsgReq struct {
-	Messages []Msg `json:"messages"`
+	Messages []Msg  `json:"messages"`
+	System   string `json:"system"`
 }
 
 type Msg struct {
